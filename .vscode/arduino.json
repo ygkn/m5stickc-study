@@ -1,0 +1,6 @@
+{
+    "configuration": "PartitionScheme=default,UploadSpeed=1500000,DebugLevel=none",
+    "board": "m5stack:esp32:m5stick-c",
+    "sketch": "m5stick_study.ino",
+    "port": "/dev/ttyUSB0"
+}
