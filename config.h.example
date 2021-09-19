@@ -1,0 +1,4 @@
+#define WIFI_SSID ("YOUR_WIFI_SSID")
+#define WIFI_PASSWORD ("YOUR_WIFI_PASS")
+
+#define API_ENDPOINT ("http://your-api-host/your-api-path")
