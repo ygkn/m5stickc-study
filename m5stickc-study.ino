@@ -28,38 +28,56 @@ void setup() {
 }
 
 void loop() {
+  M5.Lcd.fillScreen(BLACK);
+  M5.Lcd.setCursor(0, 0);
+
+  double vbat = M5.Axp.GetVbatData() * 1.1 / 1000;
+  int bat_charge_p = int8_t((vbat - 3.0) / 1.2 * 100);
+  if (bat_charge_p > 100) {
+    bat_charge_p = 100;
+  } else if (bat_charge_p < 0) {
+    bat_charge_p = 0;
+  }
+
+  M5.Lcd.printf("CHARGE: %3d%\n\n", bat_charge_p);
+
   if ((WiFi.status() != WL_CONNECTED)) {
-    while ((WiFi.status() != WL_CONNECTED)) {
-      Serial.println("[Wi-Fi] Connecting...");
-      delay(100);
-    }
-    Serial.printf("[Wi-Fi] Connected! IP Addr: %s\n", WiFi.localIP());
+    M5.Lcd.printf("Connecting to %s...\n", WIFI_SSID);
+  } else {
+    M5.Lcd.printf("Connected to %s, IP: %s\n", WIFI_SSID, WiFi.localIP());
   }
 
   M5.update();
   M5.IMU.getAccelData(&a_x, &a_y, &a_z);
 
-  StaticJsonDocument<48> doc;
+  M5.Lcd.printf("\nx: %2.3f\ny: %2.3f\nz: %2.3f\n\n", a_x, a_y, a_z);
 
-  doc["x"] = a_x;
-  doc["y"] = a_y;
-  doc["z"] = a_z;
+  if ((WiFi.status() == WL_CONNECTED)) {
+    StaticJsonDocument<48> doc;
 
-  char buffer[255];
+    doc["x"] = a_x;
+    doc["y"] = a_y;
+    doc["z"] = a_z;
 
-  serializeJson(doc, buffer, sizeof(buffer));
+    char buffer[255];
 
-  Serial.printf("[JSON] %s\n", buffer);
+    serializeJson(doc, buffer, sizeof(buffer));
 
-  HTTPClient http;
-  http.begin(API_ENDPOINT);
-  http.addHeader("Content-Type", "application/json");
-  int status_code = http.PUT((uint8_t*)buffer, strlen(buffer));
+    M5.Lcd.printf("Sending... ");
+    Serial.printf("[JSON] %s\n", buffer);
 
-  if (status_code == 200) {
-    Serial.println("[HTTP] OK!");
-  } else {
-    Serial.printf("[HTTP] NG, status: %d", status_code);
+    HTTPClient http;
+    http.begin(API_ENDPOINT);
+    http.addHeader("Content-Type", "application/json");
+    int status_code = http.PUT((uint8_t*)buffer, strlen(buffer));
+
+    if (status_code == 200) {
+      Serial.println("[HTTP] OK!");
+      M5.Lcd.printf("OK!");
+    } else {
+      Serial.printf("[HTTP] NG, status: %d", status_code);
+      M5.Lcd.printf("NG, status: %d", status_code);
+    }
   }
 
   delay(1000);
